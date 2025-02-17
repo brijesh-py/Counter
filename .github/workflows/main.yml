@@ -1,77 +1,26 @@
-name: Build and Deploy
+name: Node.js CI
 
 on:
-  push: 
-    branches: 
-      - main
-
-env:
-  CI: false
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build: 
-    name: build
+  build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
-      - name: Setup node
-        uses: actions/setup-node@1
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        uses: bahmutov/npm-install@1
-
-      - name: Build project
-        run: npm run build
-
-        # env
-          # Examples
-          # VITE_API_KEY: ${{secrets.TOKEN}}
-
-      - name: Production Ready
-        uses:  actions/upload-artifact@v2
-        with:
-          name: production-files
-          path: ./build
-
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps: 
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: production-files
-          path: ./build
-
-      - name: Deploy to Github Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          # token
-          publish_dir: ./build
-          
-
-        
-
-
-
-
-
-        
-        
-
-
-
-
-
-
-
-
-      
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm i
+    - run: npm run build
+  
